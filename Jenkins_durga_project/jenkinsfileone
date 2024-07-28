@@ -1,0 +1,137 @@
+pipeline {
+   agent any
+
+   environment {
+     DOCKERHUB_CREDENTIALS=credentials("dockerhub")
+   }
+
+   parameters {
+     string(name: "Environment", defaultValue: "dev", description: "provide environment on which you want to deploy")
+     choice(name: "Selection", choices: ["build","tests","sta"], description: "select the action you want to perform" )
+     booleanParam(name: "Continue", defaultValue: false, description: "weather you want to continue or not")
+     file(name: "State file", description: "upload state file")
+   }
+
+   stages {
+     stage("first-stage") {
+       steps {
+         script {
+           if( params.Environment == "dev" ) {
+             println("Executing first-stage")
+           }
+           println(test())
+         }
+       }
+     }
+     stage("second-stage") {
+       steps {
+         sh """
+           echo "Second Stage"
+         """
+       }
+     }
+     stage("docker-login") {
+       steps {
+         sh """
+            echo "-------- Loggingin to DockerHub ---------"
+            docker login -u $DOCKERHUB_CREDENTIALS_USR -p $DOCKERHUB_CREDENTIALS_PSW
+            echo "-------- Successfully Loggedin to DockerHub --------"
+         """
+       }
+     }
+   }
+}
+def test() {
+  return "---test---"
+}
+
+@Library('my-shared-library') _
+pipeline {
+   agent any
+
+   environment {
+     DOCKERHUB_CREDENTIALS=credentials("dockerhub")
+   }
+
+   parameters {
+     string(name: "Environment", defaultValue: "dev", description: "provide environment on which you want to deploy")
+     choice(name: "Selection", choices: ["build","tests","sta"], description: "select the action you want to perform" )
+     booleanParam(name: "Continue", defaultValue: false, description: "weather you want to continue or not")
+     file(name: "State file", description: "upload state file")
+   }
+
+   stages {
+     stage("first-stage") {
+       steps {
+         script {
+           if( params.Environment == "dev" ) {
+             println("Executing first-stage")
+           }
+           println(test())
+         }
+       }
+     }
+     stage("second-stage") {
+       steps {
+         sh """
+           echo "Second Stage"
+         """
+       }
+     }
+     stage("docker-login") {
+       steps {
+         sh """
+            echo "-------- Loggingin to DockerHub ---------"
+            docker login -u $DOCKERHUB_CREDENTIALS_USR -p $DOCKERHUB_CREDENTIALS_PSW
+            echo "-------- Successfully Loggedin to DockerHub --------"
+         """
+        // script {
+        //     dockerHubLogin("$DOCKERHUB_CREDENTIALS_USR","$DOCKERHUB_CREDENTIALS_PSW")
+        // }
+       }
+     }
+   }
+}
+def test() {
+  return "---test---"
+}
+
+
+pipeline {
+  agent any
+
+  stages {
+    stage("parallel stage") {
+      parallel {
+        stage("one") {
+          steps {
+            sh """
+              echo "one"
+            """
+          }
+        }
+        stage("two") {
+          steps {
+            sh """
+              echo "two"
+            """
+          }
+        }
+        stage("three") {
+          steps {
+            sh """
+              echo "three"
+            """
+          }
+        }
+      }
+    }
+    stage("sequential") {
+      steps {
+        sh """
+          echo "sequential stage"
+        """
+      }
+    }
+  }
+}
